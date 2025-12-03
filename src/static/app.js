@@ -28,12 +28,40 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="participants-section">
               <strong>Participants:</strong>
               ${details.participants.length > 0
-                ? `<ul class="participants-list">${details.participants.map(email => `<li>${email}</li>`).join("")}</ul>`
+                ? `<ul class="participants-list">${details.participants.map(email => `
+                    <li class="participant-item">
+                      <span class="participant-email">${email}</span>
+                      <button class="delete-participant" title="Remove participant" data-activity="${name}" data-email="${email}">&times;</button>
+                    </li>
+                  `).join("")}</ul>`
                 : `<span class="no-participants">No participants yet.</span>`}
             </div>
           `;
 
         activitiesList.appendChild(activityCard);
+
+        // Add event listeners for delete buttons
+        const deleteButtons = activityCard.querySelectorAll('.delete-participant');
+        deleteButtons.forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const activityName = btn.getAttribute('data-activity');
+            const email = btn.getAttribute('data-email');
+            try {
+              const response = await fetch(`/activities/${encodeURIComponent(activityName)}/unregister?email=${encodeURIComponent(email)}`, {
+                method: 'POST',
+              });
+              if (response.ok) {
+                fetchActivities(); // Refresh list
+              } else {
+                const result = await response.json();
+                alert(result.detail || 'Failed to remove participant.');
+              }
+            } catch (error) {
+              alert('Failed to remove participant.');
+            }
+          });
+        });
 
         // Add option to select dropdown
         const option = document.createElement("option");
